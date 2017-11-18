@@ -1,89 +1,115 @@
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en"> 
+<!doctype html> 
+<html lang="en"> 
 <head> 
-<title>star</title> 
-<script type="text/javascript"> 
-window.onload = function () { 
-     C = Math.cos; // cache Math objects 
-     S = Math.sin; 
-     U = 0; 
-     w = window; 
-     j = document; 
-     d = j.getElementById("c"); 
-     c = d.getContext("2d"); 
-     W = d.width = w.innerWidth; 
-     H = d.height = w.innerHeight; 
-     c.fillRect(0, 0, W, H); // resize <canvas> and draw black rect (default) 
-     c.globalCompositeOperation = "lighter"; // switch to additive color application 
-     c.lineWidth = 0.2; 
-     c.lineCap = "round"; 
-     var bool = 0,  
-           t = 0; // theta 
-     d.onmousemove = function (e) { 
-           if(window.T) { 
-                 if(D==9) { D=Math.random()*15; f(1); } 
-                 clearTimeout(T); 
-           } 
-           X = e.pageX; // grab mouse pixel coords 
-           Y = e.pageY; 
-           a=0; // previous coord.x 
-           b=0; // previous coord.y  
-           A = X, // original coord.x 
-           B = Y; // original coord.y 
-           R=(e.pageX/W * 999>>0)/999; 
-           r=(e.pageY/H * 999>>0)/999; 
-           U=e.pageX/H * 360 >>0; 
-           D=9; 
-           g = 360 * Math.PI / 180; 
-           T = setInterval(f = function (e) { // start looping spectrum 
-                 c.save(); 
-                 c.globalCompositeOperation = "source-over"; // switch to additive color application 
-                 if(e!=1) { 
-                       c.fillStyle = "rgba(0,0,0,0.02)"; 
-                       c.fillRect(0, 0, W, H); // resize <canvas> and draw black rect (default) 
-                 } 
-                 c.restore(); 
-                 i = 25; while(i --) { 
-                       c.beginPath(); 
-                       if(D > 450 || bool) { // decrease diameter 
-                             if(!bool) { // has hit maximum 
-                                   bool = 1; 
-                             } 
-                             if(D < 0.1) { // has hit minimum 
-                                   bool = 0; 
-                             } 
-                             t -= g; // decrease theta 
-                             D -= 0.1; // decrease size 
-                       } 
-                       if(!bool) { 
-                             t += g; // increase theta 
-                             D += 0.1; // increase size 
-                       } 
-                       q = (R / r - 1) * t; // create hypotrochoid from current mouse position, and setup variables (see: http://en.wikipedia.org/wiki/Hypotrochoid) 
-                       x = (R - r) * C(t) + D * C(q) + (A + (X - A) * (i / 25)) + (r - R); // center on xy coords 
-                       y = (R - r) * S(t) - D * S(q) + (B + (Y - B) * (i / 25)); 
-                       if (a) { // draw once two points are set 
-                             c.moveTo(a, b); 
-                             c.lineTo(x, y) 
-                       } 
-                       c.strokeStyle = "hsla(" + (U % 360) + ",100%,50%,0.75)"; // draw rainbow hypotrochoid 
-                       c.stroke(); 
-                       a = x; // set previous coord.x 
-                       b = y; // set previous coord.y 
-                 } 
-                 U -= 0.5; // increment hue 
-                 A = X; // set original coord.x 
-                 B = Y; // set original coord.y 
-           }, 16); 
+     <meta charset="UTF-8"> 
+     <title>Document</title> 
+     <style> 
+     body{ 
+           font-family: 微软雅黑; 
      } 
-     j.onkeydown = function(e) { a=b=0; R += 0.05 } 
-     d.onmousemove({pageX:300, pageY:290}) 
-} 
- 
-</script> 
+     canvas{ 
+           display:block; 
+           border:1px dotted skyblue; 
+     } 
+     </style> 
 </head> 
+<body> 
+     <h1>HTML5第4天[鼠标绘制圆形]</h1>       
+     <p>鼠标拖动绘制图形</p> 
+<canvas id="canvas" width="500" height="400"> 
+      
+</canvas> 
+<img src="http://sandbox.runjs.cn/uploads/rs/167/znddwgfj/1.png 
+" alt=""> 
+<img src="http://sandbox.runjs.cn/uploads/rs/167/znddwgfj/2.png" alt=""> 
+<script src="http://www.nimojs.com/src/js/library/jquery-1.10.1.min.js"></script> 
  
+<script> 
+var nimo={}; 
+nimo.queue=[]; 
+nimo.storage={};//用于存储x坐标、y坐标、半径、背景色、边框色的存储器。 
+nimo.creatRandom=function(startInt,endInt){//生产随机数 
+     var iResult;       
+     iResult=startInt+(Math.floor(Math.random()*(endInt-startInt+1))); 
+     return iResult 
+} 
+nimo.createCircle=function(x,y,radius){//绘制圆 
+     nimo.context.beginPath(); 
+     nimo.context.arc(x,y,radius,0,2*Math.PI);       
+     nimo.context.fill(); 
+     nimo.context.stroke();       
+} 
+nimo.draw=function(iRadius){ 
+     //绘制临时圆（mousemove所产生的临时圆） 
+     nimo.context.clearRect(0,0,nimo.$canvas.width(),nimo.$canvas.height()) 
+     nimo.createCircle(nimo.storage.x,nimo.storage.y,nimo.storage.radius) 
+     //绘制队列中保存的圆 
+     var i=nimo.queue.length; 
+     for(var i;i>0;i--){ 
+           var oTemp=nimo.queue[i-1];             
+           nimo.context.fillStyle=oTemp.backgroundColor; 
+           nimo.context.strokeStyle=oTemp.borderColor; 
+           nimo.createCircle(oTemp.x,oTemp.y,oTemp.radius) 
+     } 
+} 
+$(function(){ 
+     nimo.$Doc=$(document); 
+     nimo.$canvas=$('#canvas')       
+     nimo.context=nimo.$canvas.get(0).getContext('2d'); 
+     nimo.$canvas.attr({ 
+           'width':nimo.$Doc.width()             
+     }) 
+     nimo.$canvas.on('mousedown',function(event){ 
+           var $this=$(this); 
  
-<body style="margin:0px;padding:0px;width:100%;height:100%;overflow:hidden;"> 
-<canvas id="c"></canvas> 
+           //记录圆心坐标 
+           var iPageX=event.pageX; 
+           var iPageY=event.pageY; 
+           var oCanvasPosition=$this.position(); 
+           nimo.storage.x=iPageX-oCanvasPosition.left; 
+           nimo.storage.y=iPageY-oCanvasPosition.top; 
+ 
+           //随机生产背景色和边框色 
+           var aRGB=[]; 
+           aRGB.push(nimo.creatRandom(0,255)); 
+           aRGB.push(nimo.creatRandom(0,255)); 
+           aRGB.push(nimo.creatRandom(0,255));             
+           nimo.storage.backgroundColor='rgba('+aRGB[0]+','+aRGB[1]+','+aRGB[2]+',0.5)'; 
+           nimo.storage.borderColor='rgb('+aRGB[0]+','+aRGB[1]+','+aRGB[2]+')'; 
+            
+ 
+           nimo.$Doc.on('mousemove.draw',function(event){ 
+                 //存储计算得到的半径 
+                 var iPageX=event.pageX; 
+                 var iPageY=event.pageY; 
+                 var oCanvasPosition=$this.position(); 
+                 var iMouseX=iPageX-oCanvasPosition.left; 
+                 var iMouseY=iPageY-oCanvasPosition.top; 
+                 var iRadiusX=Math.abs(nimo.storage.x-iMouseX)//圆心x坐标减去鼠标x坐标的绝对值等于半径 
+                 var iRadiusY=Math.abs(nimo.storage.y-iMouseY)                   
+                 nimo.storage.radius=Math.sqrt(iRadiusX*iRadiusX+iRadiusY*iRadiusY); 
+                 nimo.context.fillStyle=nimo.storage.backgroundColor; 
+                 nimo.context.strokeStyle=nimo.storage.borderColor                   
+                 nimo.draw(); 
+           }) 
+ 
+           nimo.$Doc.one('mouseup',function(){                   
+                 nimo.$Doc.off('mousemove.draw');                   
+                 nimo.queue.push({ 
+                       x:nimo.storage.x, 
+                       y:nimo.storage.y, 
+                       radius:nimo.storage.radius, 
+                       backgroundColor:nimo.storage.backgroundColor, 
+                       borderColor:nimo.storage.borderColor 
+                 }) 
+           }) 
+     }) 
+}) 
+ 
+//- -！代码很乱要优化 
+</script> 
+<p> 
+     by <a href="http://www.nimojs.com/">http://www.nimojs.com/</a> 
+</p> 
 </body> 
 </html>
